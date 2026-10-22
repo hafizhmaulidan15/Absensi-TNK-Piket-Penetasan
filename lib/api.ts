@@ -215,6 +215,9 @@ export async function addManualRecord(payload: ManualPayload): Promise<SubmitRes
 
 /** Normalkan record dari GAS: field baru (nim/manual) mungkin belum ada di versi lama. */
 function normalizeRecord(record: Partial<AttendanceRecord>): AttendanceRecord {
+  const rawPhoto = String(record.photoName || record.photoUrl || '').trim();
+  const isLink = /^https?:\/\//i.test(rawPhoto);
+  const isFile = rawPhoto.length > 0 && !isLink && rawPhoto !== 'MANUAL_';
   return {
     id: String(record.id ?? ''),
     timestamp: String(record.timestamp ?? ''),
@@ -223,8 +226,8 @@ function normalizeRecord(record: Partial<AttendanceRecord>): AttendanceRecord {
     shift: (record.shift ?? '06.00') as PiketShift,
     location: String(record.location ?? ''),
     description: String(record.description ?? ''),
-    photoUrl: String(record.photoUrl ?? ''),
-    photoName: String(record.photoName ?? (String(record.photoUrl ?? '').startsWith('http') ? '' : (record.photoUrl ?? ''))),
+    photoUrl: isLink ? rawPhoto : '',
+    photoName: isFile ? rawPhoto : '',
     status: (record.status ?? 'Tepat Waktu') as AttendanceStatus,
     manual: record.manual === true,
   };

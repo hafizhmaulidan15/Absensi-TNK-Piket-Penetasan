@@ -178,7 +178,7 @@ function doPost(e) {
       return jsonOutput({
         ok: true,
         message: 'Baris manual ' + shift + ' ditambahkan untuk ' + nama + '.',
-        photoName: photoRef.indexOf('http') === 0 ? '' : photoRef,
+        photoName: photoRef && photoRef !== TAG_MANUAL_FILE ? photoRef : '',
       });
     }
 
@@ -391,8 +391,9 @@ function readRecords() {
       location: String(row[4] || ''),
       status: String(row[5] || '').trim() || shiftStatus(String(row[3] || ''), waktu),
       description: deskripsi.replace(TAG_MANUAL_NOTE, '').trim(),
-      photoUrl: String(fileRef || ''),
-    photoName: String(fileRef || '').indexOf('http') === 0 ? '' : String(fileRef || ''),
+      photoUrl: /^https?:\/\//i.test(fileRef) ? fileRef : '',
+      photoName:
+        fileRef && !/^https?:\/\//i.test(fileRef) && fileRef !== TAG_MANUAL_FILE ? fileRef : '',
       manual: isManual,
     });
   }
