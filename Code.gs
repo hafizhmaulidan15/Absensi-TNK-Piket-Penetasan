@@ -100,7 +100,12 @@ function doGet(e) {
     const denied = requireAdmin_(e);
     if (denied) return denied;
     try {
-      return jsonOutput(cleanTestRows_((e && e.parameter && e.parameter.tab) || ''));
+      return jsonOutput(
+        cleanTestRows_(
+          (e && e.parameter && e.parameter.tab) || '',
+          (e && e.parameter && e.parameter.names) || '',
+        ),
+      );
     } catch (error) {
       return jsonOutput({ ok: false, message: 'Gagal membersihkan: ' + error.message });
     }
@@ -470,7 +475,7 @@ function findNameColumn_(sheet) {
 }
 
 // Hapus baris uji (nama berpola test/uji/contoh); baris 1 = header tetap.
-function cleanTestRows_(tabName) {
+function cleanTestRows_(tabName, namesRaw) {
   const config = getConfig();
   const spreadsheet = SpreadsheetApp.openById(config.spreadsheetId);
   const sheets = spreadsheet.getSheets();
@@ -494,9 +499,17 @@ function cleanTestRows_(tabName) {
   if (lastRow < 2) return { ok: true, removed: 0, tab: target.getName() };
 
   const values = target.getRange(2, 1, lastRow - 1, target.getLastColumn()).getValues();
+  const wanted = String(namesRaw || '')
+    .split(',')
+    .map(function (value) {
+      return value.trim().toLowerCase();
+    })
+    .filter(Boolean);
   const removed = [];
   for (let i = values.length - 1; i >= 0; i -= 1) {
-    if (TEST_NAME_PATTERN.test(String(values[i][nameColumn] || ''))) removed.push(i + 2);
+    const rowName = String(values[i][nameColumn] || '').trim();
+    const byName = wanted.length > 0 && wanted.indexOf(rowName.toLowerCase()) !== -1;
+    if (TEST_NAME_PATTERN.test(rowName) || byName) removed.push(i + 2);
   }
   for (const rowIndex of removed) target.deleteRow(rowIndex);
   if (removed.length) SpreadsheetApp.flush();

@@ -216,7 +216,7 @@ export async function addManualRecord(payload: ManualPayload): Promise<SubmitRes
 /** Normalkan record dari GAS: field baru (nim/manual) mungkin belum ada di versi lama. */
 function normalizeRecord(record: Partial<AttendanceRecord>): AttendanceRecord {
   const rawPhoto = String(record.photoName || record.photoUrl || '').trim();
-  const isLink = /^https?:\/\//i.test(rawPhoto);
+  const isLink = /^(https?:\/\/|data:image\/)/i.test(rawPhoto);
   const isFile = rawPhoto.length > 0 && !isLink && rawPhoto !== 'MANUAL_';
   return {
     id: String(record.id ?? ''),
